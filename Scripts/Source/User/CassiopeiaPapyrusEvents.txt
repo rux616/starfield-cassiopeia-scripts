@@ -1,0 +1,199 @@
+; #### This file is part of the mod "Cassiopeia Papyrus Extender" (SFSE plugin) by LarannKiar ####
+
+
+
+
+
+; Events are sent by Cassiopiea in the form of global function callbacks
+
+; All event registrations are cleared OnPlayerLoadGame ( i.e. the registration map isn't saved in save games )
+
+; You can register and unregister a script for any event with:
+Bool Function RegisterForNativeEvent(String asScriptName, String asEventName, Form[] akFormFilter = None) native global
+Bool Function UnregisterForNativeEvent(String asScriptName, String asEventName) native global
+
+; Like:
+Function SomeFunction()
+	RegisterForNativeEvent("SomeScript", "TESCellFullyLoadedEvent")
+EndFunction
+
+Notes:
+	; asScriptName this is the script that will receive the callback
+	; asEventName is the the event callback's name ( must be selected from the event list, see below )
+	; event data ( e.g. akCell of TESCellFullyLoadedEvent ) can be renamed but their types ( e.g. bool, int, Actor, Location ) and their order cannot be changed
+	; Register/UnregisterForNativeEvent return true if the operation was successful
+	; not all events have event data, more will probably be decoded later...
+
+; -----------------------------------------------------------------------------------------------
+
+; You can apply/remove a filter from an already registered script with:
+Bool Function AddNativeEventFilter(String asScriptName, String asEventName, Form[] akFormFilter) native global
+Bool Function RemoveNativeEventFilter(String asScriptName, String asEventName, Form[] akFormFilter) native global
+
+; Like:
+Function SomeFunction(Cell akCell)
+	Form[] Forms = new Form[0]
+	Forms.Add(akCell)
+	RegisterForNativeEvent("SomeScript", "TESCellFullyLoadedEvent", Forms)
+EndFunction
+
+; Notes:
+	; Add/RemoveNativeEventFilter return true if the operation was successful
+
+; -----------------------------------------------------------------------------------------------
+
+; You can see what forms a script is filtered by as well check whether a script is registered for an event at all with:
+Form[] Function GetNativeEventFilteredForms(String asScriptName, String asEventName) native global
+Bool Function IsRegisteredForNativeEvent(String asScriptName, String asEventName) native global
+
+
+
+; Example usage:
+; -----------------------------------------------------------------------------------------------
+;/
+Scriptname SomeScript extends Quest Const
+
+Import CassiopeiaPapyrusExtender
+
+
+Event OnQuestInit()
+	RegisterForNativeEvent("SomeScript", "TESCellFullyLoadedEvent")
+EndEvent
+
+
+Function TESCellFullyLoadedEvent(Cell akCell) Global
+	Debug.Notification("Cell " + GetHexFormID(akCell) + " has been fully loaded.")
+EndFunction
+/;
+; -----------------------------------------------------------------------------------------------
+
+
+
+
+
+; ##### Events ( with EventData ) #####
+;
+;
+; # when this actor equips / unequips something
+; # akFilter support: can be filtered by akSource
+Function TESEquipEvent(Actor akSource, Int akItemBaseID, bool abEquipped) global
+;
+; # sent when this cell gets fully loaded
+; # has akFilter support
+Function TESCellFullyLoadedEvent(Cell akCell) global
+;
+; # sent when a reference Activates another
+; # has akFilter support ( code checks for both the activated and the action references, disjunctive )
+Function TESActivateEvent(ObjectReference akActivatedRef, ObjectReference akActionRef) global
+;
+; # workshop events
+; # have akFilter support ( code checks for both itemRef and workshopRef, disjunctive )
+Function Workshop_ItemGrabbedEvent(ObjectReference itemRef, ObjectReference workshopRef) global
+Function Workshop_ItemMovedEvent(ObjectReference itemRef, ObjectReference workshopRef) global
+Function Workshop_ItemPlacedEvent(ObjectReference itemRef, ObjectReference workshopRef) global
+;
+; # input event
+; # ( aiKeyCode is Virtual-Key Code, see https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes )
+Function BSInputEvent(Int aiKeyCode, String asControlName, String asFriendlyName, bool bPressed, Float afHeldTime) global
+;
+; # sent when the player selects a system or planet to travel to in the GalaxyStarMapMenu
+; # ( similar to the vanilla actor event OnPlayerFailedPlotRoute() )
+; # aeFailedPlotReason: see Actor.psc
+; # afDistance: measured in light years
+; Function OnPlayerPlotRoute(ObjectReference akHomeshipRef, Int aeFailedPlotReason, Int aiJumps, Float afShipGravJumpRange, Float afDistance, Float afCargoWeight, Float afCargoCapacity, Float afFuelConsumption, Float afMaxFuel) global
+;
+; # sent when the player clicks OK to close the TextInputMenu
+Function TextInputMenu_EndEditText(String sInputText) global
+;
+; # when this form is deleted
+; # note that scripts must be previously filtered for the deleted form to receive this event
+Function TESFormDeleteEvent(Int aiDeletedFormID) global
+;
+; # when this reference is loaded / unloaded
+; # has akFilter support
+Function TESObjectLoadedEvent(ObjectReference akReference, bool abLoaded) global
+;
+; # sent when this actor changes their ParentCell
+; # has akFilter support ( code can check for the actor and the cells, disjunctive )
+Function ActorCellChangeEvent(Actor akActor, Cell akPreviousCell, Cell akCurrentCell) Global
+;
+; # when this reference's 3D is attached
+; # has akFilter support ( code can check its GetBaseObject() too, disjunctive )
+Function ReferenceSet3d(ObjectReference akReference) global
+;
+; # when this location is loaded
+Function BGSLocationLoadedEvent(Location akLocation) global
+;
+; # when this actor enters/exits a furniture
+; # has akFilter support ( code can check both akActor and akFurniture, disjunctive )
+Function TESFurnitureEvent(Actor akActor, ObjectReference akFurniture, Bool abExiting) global
+;
+; # when an actor Harvests a Flora reference
+; # has akFilter support ( code can check akActor, akHarvestedReference and akProduceForm as well, disjunctive )
+Function TESHarvestEvent(Actor akActor, ObjectReference akHarvestedReference, Form akProduceForm) global
+;
+; # when this Outpost is removed
+; # has akFilter support ( code can check akOutpostCell, akOutpostLocation and akOutpostWorldSpace as well, disjunctive )
+Function RemoveOutpostEvent(Cell akOutpostCell, Location akOutpostLocation, WorldSpace akOutpostWorldSpace) global
+
+
+
+
+
+; ##### Events ( without EventData ) #####
+;
+;
+TESLoadGameEvent
+FirstThirdPersonSwitch
+Workshop_CargoLinkAddedEvent
+Workshop_CargoLinkTargetChangedEvent
+Workshop_EnterOutpostBeaconModeEvent
+Workshop_ItemProducedEvent
+Workshop_ItemRemovedEvent
+Workshop_ItemRepairedEvent
+Workshop_ItemScrappedEvent
+Workshop_OutpostNameChangedEvent
+Workshop_OutpostPlacedEvent
+Workshop_PlacementStatusEvent
+Workshop_PowerOffEvent
+Workshop_PowerOnEvent
+Workshop_SnapBehaviorCycledEvent
+Workshop_WorkshopFlyCameraEvent
+Workshop_WorkshopItemPlacedEvent
+Workshop_WorkshopModeEvent
+Workshop_WorkshopOutputLinkEvent
+Workshop_WorkshopStatsChangedEvent
+Workshop_WorkshopUpdateStatsEvent
+CraftingMenu_CraftItem
+CraftingMenu_InstallMod
+CraftingMenu_RenameItem
+StarMapMenu_ExecuteRoute
+StarMapMenu_Galaxy_FocusSystem
+StarMapMenu_LandingInputInProgress
+StarMapMenu_MarkerGroupContainerVisibilityChanged
+StarMapMenu_MarkerGroupEntryClicked
+StarMapMenu_MarkerGroupEntryHoverChanged
+StarMapMenu_OnCancel
+StarMapMenu_OnClearRoute
+StarMapMenu_OnExitStarMap
+StarMapMenu_OnGalaxyViewInitialized
+StarMapMenu_OnHintButtonClicked
+StarMapMenu_OnOutpostEntrySelected
+StarMapMenu_QuickSelectChange
+StarMapMenu_ReadyToClose
+StarMapMenu_ScanPlanet
+StarMapMenu_SelectedLandingSite
+StarMapMenu_ShowRealCursor
+SurfaceMapMenu_MarkerClicked
+SurfaceMapMenu_TryPlaceCustomMarker
+PhotoMode_TakeSnapshot
+
+
+
+
+
+
+
+
+
+
