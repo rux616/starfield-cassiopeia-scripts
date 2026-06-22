@@ -1,5 +1,4 @@
-# Cassiopeia Papyrus Extender
+# Cassiopeia Papyrus Extender Script Sources
+Contains the script sources for the Starfield mod "Cassiopeia Papyrus Extended". Intended to be used as a submodule.
 
-This repository is meant for use as a git submodule.
-
-The only thing contained here are the papyrus source files for the mod. The actual mod lives on [Nexus Mods](https://www.nexusmods.com/starfield/mods/10896).
+Actual mod lives on [Nexus Mods](https://www.nexusmods.com/starfield/mods/10896).
