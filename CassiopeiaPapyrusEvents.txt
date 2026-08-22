@@ -115,6 +115,8 @@ Function TESObjectLoadedEvent(ObjectReference akReference, bool abLoaded) global
 ;
 ; # sent when this actor changes their ParentCell
 ; # has akFilter support ( code can check for the actor and the cells, disjunctive )
+; # ( it is expected for an exterior akPreviousCell to be None after Fast Travel if the previous cell was unloaded by the vanilla code during the Loading Screen )
+; # ( it is expected for akPreviousCell to be None if the actor was just created or loaded in the cell )
 Function ActorCellChangeEvent(Actor akActor, Cell akPreviousCell, Cell akCurrentCell) Global
 ;
 ; # when this reference's 3D is attached
