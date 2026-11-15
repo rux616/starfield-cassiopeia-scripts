@@ -53,6 +53,11 @@ Bool Function FadeOutActor(Actor akActor) native global
    ; # flags the actor's path invalid
 Bool Function ForcePathFailure(Actor akActor) native global
    ;
+   ; # returns how many Active Effects this actor has
+   ; # ( returns -1 if akActor is None )
+   ; # ( returns -2 if the actor's Active Effect data cannot be accessed at all, e.g. actor IsDisabled() )
+Int Function GetActiveEffectCount(Actor akActor) native global
+   ;
    ; # 3D Update flags are technically stored in an uint16_t; the native code sets 3D Update flags to request additional ( or just simply specify the ) 3D updates for the next actor update phase
    ; # ( actor updates happen constantly; when the update phase is complete, the native code automatically unsets the flag if the update request identified by the flag was processed )
    ; # ai3DUpdateFlag:
@@ -263,7 +268,7 @@ Bool Function PlayIdleNoConditions(Idle akIdle, Actor akActor, ObjectReference a
 Int Function RemovePerkFromAll(Actor[] akActors, Perk akPerk) native global
    ;
    ; # resumes animation processing for this actor
-   ; # ( returns -1 on error; returns 0 if animation processing was not disabled and is running; returns 1 if animation processing was disabled but has been reenabled )
+   ; # ( returns -1 on error; returns 0 if animation processing was not disabled and is running; returns 1 if animation processing was disabled and has been reenabled )
    ; # ( see AreAnimationsPaused and PauseAnimations )
 Int Function ResumeAnimations(Actor akActor) native global
    ;
@@ -387,7 +392,7 @@ Bool Function GetCellLoaded(Cell akCell) native global
    ;
    ; Function SetEyeColorBlue(Actor akActor)
    ; 	 SetEyeColor(akActor, "Blue")						; set eye color
-   ; 	 UpdateSkinTone(akActor)						; eye color can be updated by UpdateSkinTone, see below
+   ; 	 UpdateSkinTone(akActor)						; eye color can be updated by UpdateSkinTone and not UpdateAppearance, see below
    ; EndFunction
    ;
    ;
@@ -466,7 +471,7 @@ Bool Function SetSkinTone(Actor akActor, int aiSkinToneIndex) native global
    ; To change an actor's facial animation to the "Apologetic" Anim Archetype without adding the archetype keyword:
    ;
    ; Function SetApologeticFaceAnimArchetype(Actor akActor) Global
-   ; 	Keyword AnimFaceArchetypeApologetic = Game.GetFormFromFile(0x00118A4D, "Starfield.esm")
+   ; 	Keyword AnimFaceArchetypeApologetic = Game.GetFormFromFile(0x00118A4D, "Starfield.esm") as Keyword
    ; 	SetFaceAnimArchetype(akActor, AnimFaceArchetypeApologetic)
    ; EndFunction
    ;
@@ -474,7 +479,7 @@ Bool Function SetSkinTone(Actor akActor, int aiSkinToneIndex) native global
    ; To change an actor's facial animation to the "Apologetic" Anim Archetype with adding the archetype keyword:
    ;
    ; Function SetApologeticFaceAnimArchetypeVANILLA(Actor akActor) Global
-   ; 	Keyword AnimFaceArchetypeApologetic = Game.GetFormFromFile(0x00118A4D, "Starfield.esm")
+   ; 	Keyword AnimFaceArchetypeApologetic = Game.GetFormFromFile(0x00118A4D, "Starfield.esm") as Keyword
    ; 	akActor.ChangeAnimFaceArchetype(AnimFaceArchetypeApologetic)
    ; EndFunction
    ;
@@ -644,6 +649,9 @@ Bool Function HasBaseFormComponent(Form akForm, String asBaseFormComponent) nati
    ; # returns true if this form is runtime created ( i.e. formID starts with FF )
 Bool Function IsCreated(Form akForm) native global
    ;
+   ; # returns true if this form ( can be Weapon, Ammo, Armor, Race, etc. ) is Playable
+Bool Function IsPlayable(Form akForm) native global
+   ;
    ; # returns the last overrider plugin of this form ( the one that determines this form's data; in SF1Edit the record conflict winner )
 String Function LookupLastOverriderPlugin(Form akForm) native global
    ;
@@ -661,6 +669,9 @@ Bool Function SetFormFlag(Form akForm, Bool abSet, Int aiFlag) native global
    ;
    ; # sets this form's Full Name ( TESFullName )
 Bool Function SetTESFullName(Form akForm, String asName) native global
+   ;
+   ; # sets the Playable flag on this form
+Bool Function SetPlayable(Form akForm, Bool abSet) native global
 
 
 
@@ -970,8 +981,11 @@ String[] Function GetDisplayNameOfAllItemsInStack(ObjectReference akReference, I
    ; # returns the name of the Nth item at the given stack
 String Function GetDisplayNameOfItem(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0, Bool abCanReturnBaseName = true) native global
    ;
-   ; # returns the base forms of actor's equipped inventory items
+   ; # returns the base forms of this actor's equipped inventory items
 Form[] Function GetEquippedInventoryItems(Actor akActor) native global
+   ;
+   ; # returns the Item Indexes of this actor's equipped inventory items
+Int[] Function GetEquippedItemIndexes(Actor akActor) native global
    ;
    ; # returns how many inventory items this reference has
 Int Function GetInventoryItemCount(ObjectReference akReference) native global
@@ -997,6 +1011,9 @@ Int[] Function GetItemIndexAndStackByName(ObjectReference akReference, String as
    ; # returns the ItemIndex ( aiItemIndex ) and Stack ( aiStack ) of the first item which has the given keyword
 Int[] Function GetItemIndexAndStackByKeyword(ObjectReference akReference, Keyword akKeyword) native global
    ;
+   ; # returns the base object of the Nth item
+Form Function GetNthItemBaseObject(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
    ; # calculates the Damage Output ( Electromagnetic, Energy, Physical ) of the Nth Weapon form
 Float Function GetNthItemDamageOutputElectromagnetic(ObjectReference akReference, int aiItemIndex, int aiStack, Bool abCountExplosives = false) native global
 Float Function GetNthItemDamageOutputEnergy(ObjectReference akReference, int aiItemIndex, int aiStack, Bool abCountExplosives = false) native global
@@ -1011,6 +1028,19 @@ Float Function GetNthItemDamageResistanceElectromagnetic(ObjectReference akRefer
 Float Function GetNthItemDamageResistanceEnergy(ObjectReference akReference, int aiItemIndex, int aiStack) native global
 Float Function GetNthItemDamageResistancePhysical(ObjectReference akReference, int aiItemIndex, int aiStack) native global
    ;
+   ; # returns the Ammo of the Nth item ( Weapon )
+Ammo Function GetNthWeaponAmmo(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns the Ammo Capacity of the Nth item ( Weapon )
+   ; # ( returns -1 if akReference is None OR the Nth item is not a Weapon OR the Nth Weapon does not have Ammunition data e.g. FragGrenade )
+Int Function GetNthWeaponAmmoCapacity(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns the Override Projectile of the Nth item ( Weapon )
+Projectile Function GetNthWeaponProjectile(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns the object mods of the Nth item at the given stack
+ObjectMod[] Function GetObjectModsOfItem(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0, Bool abExcludeModColls = false) native global
+   ;
    ; # returns the total weight of all worn ( equipped ) Weapon and Armor inventory items
    ; # ( akItemFilter is optional; if not empty, the code will only count items that have any of the filter keywords )
 Float Function GetWornItemsWeight(Actor akActor, Bool abCalcWeapons, Bool abCalcArmors, Keyword[] akItemFilter = None) native global
@@ -1021,8 +1051,17 @@ Bool Function IsNthItemEquipStateLocked(Actor akActor, Int aiItemIndex) native g
    ; # returns true if the Nth item is equipped
 Bool Function IsNthItemEquipped(Actor akActor, Int aiItemIndex) native global
    ;
+   ; # returns true if the Nth item has a Legendary mod
+Bool Function IsNthItemLegendary(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns true if the Nth item is Playable
+Bool Function IsNthItemPlayable(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
    ; # returns true if the Nth item is a Quest Item
 Bool Function IsNthItemQuestItem(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns true if the Nth item ( Weapon ) has the Can't Drop flag
+Bool Function IsNthWeaponCantDrop(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
    ; # prints the inventory of this reference to a file
    ; # ( e.g. asFilePath = ".\\Data\\SFSE\\"; asFileName="MyInventory.txt" )
@@ -1031,8 +1070,62 @@ Bool Function PrintInventoryToFile(ObjectReference akReference, String asFilePat
    ; # removes the Nth item
 Bool Function RemoveNthItem(ObjectReference akReference, Int aiItemIndex, Int aiCount = 1, Int aiTransferReason = 0, ObjectReference akOtherContainer = None) native global
    ;
+   ; # sets the Ammo of the Nth item ( Weapon )
+Bool Function SetNthWeaponAmmo(ObjectReference akReference, Ammo akAmmo, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # sets the Ammo Capacity of the Nth item ( Weapon )
+Bool Function SetNthWeaponAmmoCapacity(ObjectReference akReference, Int aiAmmoCapacity, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # sets the Override Projectile of the Nth item ( Weapon )
+Bool Function SetNthWeaponProjectile(ObjectReference akReference, Projectile akProjectile, Int aiItemIndex, Int aiStack = 0) native global
+   ;
    ; # unequips the Nth item
 Bool Function UnequipNthItem(Actor akActor, Int aiItemIndex, Bool abPreventEquip = false, Bool abSilent = false) native global
+;/
+;
+; # example function that transfers all Legendary items from akSourceContainer to akDestContainer
+;
+Function test_TransferAllLegenaryItems(ObjectReference akSourceContainer, ObjectReference akDestContainer) Global
+	If !akSourceContainer
+		Debug.MessageBox("ERROR: akSourceContainer is None")
+		Return None
+	EndIf
+	If !akDestContainer
+		Debug.MessageBox("ERROR: akDestContainer is None")
+		Return None
+	EndIf
+	Utility.SetINIBool("bEnableLogging:Papyrus", True)
+	Utility.SetINIBool("bEnableTrace:Papyrus", True)
+	Debug.OpenUserLog("TransferAllLegenaryItemsLog")
+	Int Index = GetInventoryItemCount(akSourceContainer)
+	If Index == 0
+		Debug.TraceUser("TransferAllLegenaryItemsLog", "WARNING: Exiting, inventory of " + akSourceContainer + " is empty. Closing log...")
+		Debug.CloseUserLog("TransferAllLegenaryItemsLog")
+		Return None
+	EndIf
+	Debug.TraceUser("TransferAllLegenaryItemsLog", "Beginning to loop " + Index + " items in the inventory of " + akSourceContainer + "...")
+	Int iTransferredItemCount = 0
+	While Index >= 0
+		If IsNthItemLegendary(akSourceContainer, aiItemIndex = Index)
+			If IsNthItemPlayable(akSourceContainer, aiItemIndex = Index)
+				Debug.TraceUser("TransferAllLegenaryItemsLog", " -> transferring Legendary item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+				If RemoveNthItem(akSourceContainer, aiItemIndex = Index, aiCount = -1, akOtherContainer = akDestContainer)
+					iTransferredItemCount = iTransferredItemCount + 1
+				Else
+					Debug.TraceUser("TransferAllLegenaryItemsLog", "ERROR: RemoveNthItem() returned False, item couldn't be transferred.")
+				EndIf
+			Else
+				Debug.TraceUser("TransferAllLegenaryItemsLog", " -> cannot transfer non-Playable item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+			EndIf
+		Else
+			Debug.TraceUser("TransferAllLegenaryItemsLog", " -> cannot transfer non-Legendary item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+		EndIf
+		Index = Index - 1
+	EndWhile
+	Debug.TraceUser("TransferAllLegenaryItemsLog", "Loop finished. Transferred " + iTransferredItemCount + " items. Closing log...")
+	Debug.CloseUserLog("TransferAllLegenaryItemsLog")
+EndFunction
+/;
 
 
 
@@ -1294,7 +1387,10 @@ Bool Function RemoveOutfitForm(Outfit akOutfit, Form akFormToRemove) native glob
    ; # even though BGS partially cut Loose Mods during development
 MiscObject Function GetLooseMod(ObjectMod akObjectMod) native global
    ;
-   ; # returns true is this object mod is flagged as a ModCollection
+   ; # returns true is this object mod is Legendary
+Bool Function IsLegendaryMod(ObjectMod akObjectMod) native global
+   ;
+   ; # returns true is this object mod is a Mod Collection
 Bool Function IsModCollection(ObjectMod akObjectMod) native global
 
 
@@ -1554,6 +1650,10 @@ Bool Function SuppressHUDNotifications(bool abSuppress = true) native global
 
 
    ; ##### Utility #####
+   ;
+   ; # returns true if this command is registered in the Console
+   ; # ( asCommand can be both the long command name like "EvaluatePackage" and the short name like "EVP" )
+Bool Function DoesConsoleCommandExist(String asCommand) native global
    ;
    ; # returns true if the given file exist ( use like asFilePath = ".\\Data\\SFSE\\"; asFileName="MyFile.txt" )
 Bool Function DoesFileExist(String asFilePath, String asFileName) native global
