@@ -125,6 +125,8 @@ Function Workshop_ItemHighlightChangeEvent(Int aiCurrentHighlightedItemHandle, I
 ; # received when the stops looking at an item
 Function Workshop_ItemHighlightExitEvent(Int aiHighlightedItemHandle, ObjectReference workshopRef) global
 ;
+;
+;
 ; # input event
 ; # ( aiKeyCode is Virtual-Key Code, see https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes )
 Function BSInputEvent(Int aiKeyCode, String asControlName, String asFriendlyName, bool bPressed, Float afHeldTime) global
@@ -148,6 +150,9 @@ Function TESFormDeleteEventStr(String sHexFormID) global
 ; # when this reference is loaded / unloaded
 ; # has akFilter support
 Function TESObjectLoadedEvent(ObjectReference akReference, bool abLoaded) global
+;
+; # string version
+Function TESObjectLoadedEventStr(String sHexFormID, bool abLoaded) global
 ;
 ; # sent when this actor changes their ParentCell
 ; # has akFilter support ( code can check for the actor and the cells, disjunctive )
@@ -178,6 +183,10 @@ Function RemoveOutpostEvent(Cell akOutpostCell, Location akOutpostLocation, Worl
 ; # akAutopilotTarget may be a Cell or a Planet form
 ; # ( see other Cruise Mode events below )
 Function OnCruiseLockCourse(Form akAutopilotTarget) global
+;
+; # received when a Global Variable changes
+; # note that scripts must be previously filtered for the Global Variable to receive this event
+Function GlobalVariableChangedEvent(GlobalVariable akGlobal, Float afOldValue, Float afCurrentValue) global
 
 
 

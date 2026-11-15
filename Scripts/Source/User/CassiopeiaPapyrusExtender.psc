@@ -181,6 +181,9 @@ Keyword Function GetSpeakingAnimArchetype(Actor akActor) native global
    ; # returns the Spells of this actor
 Spell[] Function GetSpells(Actor akActor) native global
    ;
+   ; # calculates the threat ratio between akSubject and akTarget based on the vanilla combat strength formula
+Float Function GetThreatRatio(Actor akSubject, Actor akTarget) native global
+   ;
    ; # returns true if this actor is a templated actor
    ; # aiTemplateFlag: -1 = base template; rests are unknown; can be used to filter by Face, Faction, Keyword etc. templates
 Bool Function GetUsesLeveledTemplate(Actor akActor, Int aiTemplateFlag = -1) native global
@@ -260,6 +263,9 @@ Bool Function IsTurning(Actor akActor) native global
    ; # returns true if this actor underwater ( submerged )
 Bool Function IsUnderwater(Actor akActor) native global
    ;
+   ; # returns true if the land vehicle this actor is sitting in is in the air
+Bool Function IsVehicleInAir(Actor akActor) native global
+   ;
    ; # returns true if this actor walking
 Bool Function IsWalking(Actor akActor) native global
    ;
@@ -328,10 +334,49 @@ Int Function UnequipAllThenUpdate3D(Actor akActor) native global
 
    ; ##### ActorBase #####
    ;
+   ; # adds this head part
+   ; # ( abRemovePrevious: removes any previous head part including its extra parts of the same HeadPartType )
+   ; # ( abAddExtraParts: adds the extra parts of akHeadPart too )
+   ; # ( returns true if akActorBase has akHeadPart on function end )
+Bool Function AddHeadPart(ActorBase akActorBase, HeadPart akHeadPart, Bool abRemovePrevious = True, Bool abAddExtraParts = True) native global
    ;
    ; # returns the Min/Max Height
 Float Function GetHeightMin(ActorBase akActorBase) native global
 Float Function GetHeightMax(ActorBase akActorBase) native global
+   ;
+   ;/
+   HeadPartTypes:
+	0 Misc
+	1 Face
+	2 EyeRight
+	3 Hair
+	4 FacialHair
+	5 Scar
+	6 Eyebrows
+	7 Jewelry
+	8 Meatcaps
+	9 Teeth
+	10 HeadRear
+	11 ExtraHair
+	12 EyeLeft
+	13 Eyelashes
+	14 CreatureHead
+	15 CreatureTorso
+	16 CreatureArs
+	17 CreatureLegs
+	18 CreatureTail
+	19 CreatureWings
+   /;
+   ; # returns the head part with the given head part type
+HeadPart Function GetHeadPart(ActorBase akActorBase, Int aeHeadPartType) native global
+   ;
+   ; # returns true if this actor base has the specified head part
+Bool Function HasHeadPart(ActorBase akActorBase, HeadPart akHeadPart) native global
+   ;
+   ; # removes this head part
+   ; # ( returns true if akActorBase does not have akHeadPart on function end )
+Bool Function RemoveHeadPart(ActorBase akActorBase, HeadPart akHeadPart, Bool abRemoveExtraParts = True) native global
+
    ;
    ; # sets the Min/Max Height
 Bool Function SetHeightMin(ActorBase akActorBase, Float afValue) native global
@@ -353,6 +398,12 @@ Int Function GetAliasIndex(Alias akAlias) native global
    ;
    ; # returns this alias' name
 String Function GetAliasName(Alias akAlias) native global
+   ;
+   ; # returns true if this alias is Optional
+Bool Function IsOptional(Alias akAlias) native global
+   ;
+   ; # sets/unsets this alias Optional
+Bool Function SetOptional(Alias akAlias, Bool abOptional) native global
 
 
 
@@ -762,11 +813,21 @@ Function DisablePlayerLandVehiclePlacement(Bool abDisable) native global
    ; # enables/disables distant LOD objects
 Bool Function EnableDistantLOD(bool abEnable) native global
    ;
-   ; # returns the seconds passed after save game load ( note: it does not tick while in menu mode )
+   ; # returns the HUD actors ( actors eligible to be shown on the HUD )
+   ; # ( abShownOnly: to return only the one whose stats are actually visible on the HUD )
+Actor[] Function GetActorsOnHUD(Bool abShownOnly = False) native global
+   ;
+   ; # returns the seconds passed after the first save game load ( note: it does not tick in menu mode )
 Float Function GetAIUpdateTimer() native global
+   ;
+   ; # returns the position ( x, y, z ) of the world camera
+Float[] Function GetCameraPosition() native global
    ;
    ; # returns the Console selected reference
 ObjectReference Function GetConsoleRef() native global
+   ;
+   ; # returns the Constructible Object of the selected/currently viewed item mod in the workbench menu
+ConstructibleObject Function GetCraftingMenuRecipe() native global
    ;
    ; # returns the activatable reference in the crosshair
 ObjectReference Function GetCrosshairRef() native global
@@ -777,6 +838,23 @@ Actor[] Function GetCrowdActors() native global
    ; # returns the Autopilot target in Cruise Mode
    ; # ( may be a Cell or a Planet form )
 Form Function GetCruiseModeAutopilotTarget() native global
+   ;
+Struct CustomMarkerData
+	Bool bValid
+	Float fPosX
+	Float fPosY
+	Float fPosZ
+	Location CurrentLocation
+	Cell ParentCell
+	WorldSpace ParentWorldSpace
+EndStruct
+   ;
+   ; # returns the location and position of the Custom Marker placeable in the Surface Map menu
+   ; # ( bValid = true means the Custom Marker exists )
+CustomMarkerData Function GetCustomMarkerPosition() native global
+   ;
+   ; # returns the Galaxy Cell
+Cell Function GetGalaxyCell() native global
    ;
    ; # returns the game date in an Int[], the 7 elements are as follows:
    ; # year, month, day, local hour and minute, UT hour and minute
@@ -816,6 +894,9 @@ Int Function GetPackInCellReferenceCount(String asPluginName) native global
    ;
    ; # returns the actors selectable in Photo Mode ( requires IsMenuOpen("PhotoModeMenu") == true )
 Actor[] Function GetPhotoModeActors() native global
+   ;
+   ; # returns how many Digipicks are in the player's inventory
+Int Function GetPlayerDigipickCount() native global
    ;
    ; # returns how many follower actors the player has
 Int Function GetPlayerFollowerCount() native global
@@ -898,6 +979,9 @@ Bool Function OpenSurfaceMap() native global
    ;
    ; # plays an UI menu sound ( e.g. UIMenuGeneralOK, UIMenuGeneralActivateFailure )
 Function PlayMenuSound(String asSoundName) native global
+   ;
+   ; # plays a Wwise Event form by its Default Object ( e.g. SpaceshipFarTravelArrivalSound_DO [DFOB:00045644] )
+Bool Function PlayDefaultObjectWwiseEventForm(Form akDefaultObject) native global
    ;
    ; # changes the Camera State
    ; # Use with care; camera states rely on complex hardcoded behaviors to function properly,
@@ -1307,6 +1391,9 @@ Bool Function SetItemComponents(MiscObject akMiscObject, ItemComponentData[] akI
 
    ; ##### ObjectReference #####
    ;
+   ; # attaches these references' lights; returns how many refs were processed
+Int Function AttachRefLight(ObjectReference[] akReferences) native global
+   ;
    ; # copies the inventory items from the source to the target inventory
    ; # ( source and target can't be the same reference )
    ; # ( aiFormTypes must include the target form types )
@@ -1330,6 +1417,9 @@ Bool Function DoesInventoryContainQuestItem(ObjectReference akReference) native 
    ; # enables these references
 Function EnableAll(ObjectReference[] akReferences, Bool abRecalcInventory = true) native global
    ;
+   ; # returns the lowest unused ( and optional non-reserved ) FurnitureMarkerID that is suitable for this actor
+Int Function FindUnusedFurnitureMarker(ObjectReference akFurniture, Actor akActor, Bool abIgnoreReserved = False) native global
+   ;
    ; # returns the position of this reference's 3D
    ; # ( usually matches the ref's position, unless the ref is AttachTo() another ref )
 Float[] Function Get3DPosition(ObjectReference akReference) native global
@@ -1352,8 +1442,17 @@ Quest[] Function GetAliasHolderQuests(ObjectReference akReference) native global
    ; # returns the Aliases that hold this reference
 Alias[] Function GetAliases(ObjectReference akReference) native global
    ;
+Struct LinkedRefData
+	ObjectReference LinkedRef
+	Keyword LinkKeyword
+EndStruct
+   ;
+   ; # returns all linked references
+LinkedRefData[] Function GetAllLinkedRefsEx(ObjectReference akReference, Keyword akKeyword = None) native global
+   ;
    ; # returns all references linked to this reference
 ObjectReference[] Function GetAllRefsLinkedToMe(ObjectReference akReference, Keyword akKeyword = None) native global
+LinkedRefData[] Function GetAllRefsLinkedToMeEx(ObjectReference akReference, Keyword akKeyword = None) native global
    ;
    ; # returns the reference akReference is AttachTo
 ObjectReference Function GetAttachToRef(ObjectReference akReference) native global
@@ -1366,6 +1465,9 @@ Float Function GetDistanceFromCelestialBody(ObjectReference akReference, Planet 
    ;
    ; # calculates the distance between two references in light years
 Float Function GetDistanceGalacticLightYears(ObjectReference akReference, ObjectReference akReference2) native global
+   ;
+   ; # returns the dropped item reference ( actors can drop a weapon when killed )
+ObjectReference Function GetDroppedItemRef(ObjectReference akReference) native global
    ;
    ; # returns this reference's Enable State Parent
 ObjectReference Function GetEnableStateParent(ObjectReference akReference) native global
@@ -1476,6 +1578,16 @@ Bool Function IsOnPlayerHomeSpaceship(ObjectReference akReference) native global
    ; # returns true if the vanilla code considers this reference an Outpost Beacon
 Bool Function IsOutpostBeacon(ObjectReference akReference) native global
    ;
+   ; # returns true if this reference is a Particle System emitter ( e.g. FXGasVent_01_Neon [REFR:000BDB74] )
+Bool Function IsParticleEmitter(ObjectReference akReference) native global
+   ;
+   ; # returns true if this spaceship is owned by the player
+Bool Function IsPlayerOwnedShip(ObjectReference akSpaceshipReference) native global
+   ;
+   ; # returns true if this reference is part of a spaceship reference
+   ; # ( includes exterior and interior structural parts; player placed items do not count )
+Bool Function IsSpaceshipPart(ObjectReference akReference) native global
+   ;
    ; # returns true if this reference is temporary [T]
 Bool Function IsTemporaryReference(ObjectReference akReference) native global
    ;
@@ -1497,6 +1609,9 @@ Bool Function RenameOutpost(ObjectReference akReference, String asName) native g
    ; # removes this Outpost
 Bool Function RemoveOutpost(ObjectReference akOutpostReference) native global
    ;
+   ; # remove these references' lights; returns how many refs were processed; note that the vanilla code may reattach them instantly
+Int Function RemoveRefLight(ObjectReference[] akReferences, Bool abMagicLight = False) native global
+   ;
    ; # resets this reference's inventory
 Bool Function ResetInventory(ObjectReference akReference, bool abLeveledOnly, bool abSkipDefaultOutfit) native global
    ;
@@ -1511,6 +1626,9 @@ Function SetTemporaryReference(ObjectReference akReference, bool abSet) native g
    ;
    ; # updates this reference's 3D
 Bool Function UpdateReference3D(ObjectReference akReference) native global
+   ;
+   ; # updates these references' lights; returns how many refs were processed
+Int Function UpdateRefLight(ObjectReference[] akReferences) native global
 
 
 
@@ -1641,6 +1759,15 @@ Quest[] Function GetAllRunningQuests() native global
    ;
    ; # returns all Topics of this quest
 Topic[] Function GetAllTopicsByOwnerQuest(Quest akQuest) native global
+   ;
+   ; # returns all Location Aliases of this quest
+LocationAlias[] Function GetLocAliases(Quest akQuest) native global
+   ;
+   ; # returns all Reference Aliases of this quest
+ReferenceAlias[] Function GetRefAliases(Quest akQuest) native global
+   ;
+   ; # returns all Reference Collection Aliases of this quest
+RefCollectionAlias[] Function GetRefColls(Quest akQuest) native global
    ;
    ; # returns true if this quest is flagged as failed
 Bool Function IsQuestFailed(Quest akQuest) native global
@@ -1906,9 +2033,36 @@ Bool Function DoesConsoleCommandExist(String asCommand) native global
    ; # returns true if the given file exist ( use like asFilePath = ".\\Data\\SFSE\\"; asFileName="MyFile.txt" )
 Bool Function DoesFileExist(String asFilePath, String asFileName) native global
    ;
+   ; # returns true if this folder exists
+Bool Function DoesFolderExist(String asFolderPath) native global
+   ;
    ; # erase
    ; # ( e.g. asInput="string", aiOffset=2, aiCount=3, would return "stg" )
 String Function EraseStr(String asInput, Int aiOffset, Int aiCount) native global
+   ;
+   ; # executes Console Commands
+Int Function ExecuteCommands(String[] asCommands) native global
+   ;
+   ; # export all existing or an array of forms to a file
+   ;
+   ; # ( line example "|16E2C6|Starfield.esm" --> FormID without Load Order prefix followed by the Source Plugin)
+   ; # ( asFilePath and asFileName must be specified )
+   ; Return values:
+   ; -6, -5, -4: file could not be created or opened
+   ; -3: previous file count not be deleted
+   ; -2: file already exists and abOverwriteFileIfExists is False
+   ; -1: asFilePath or asFileName is empty
+   ; 0 and higher: the number of exported forms
+   ;/
+	Function test_ExportFormsToFileOfPlayerParentCellRefs(bool abOverwriteFileIfExists = False) global
+		String asFilePath = ".\\Data\\SFSE\\"
+		String asFileName = "ExportFormsToFile.txt"
+		Debug.MessageBox("ExportFormsToFile = " + ExportFormsToFile(GetReferencesInCell(Game.GetPlayer().GetParentCell()) as Form[], asFilePath, asFileName, abOverwriteFileIfExists))
+	EndFunction
+   /;
+   ;
+Int Function ExportAllFormsToFile(String asFilePath, String asFileName, bool abOverwriteFileIfExists = False) native global
+Int Function ExportFormsToFile(Form[] akForms, String asFilePath, String asFileName, bool abOverwriteFileIfExists = False) native global
    ;
    ; # attempts to find asToFind in asInput; if found, returns its position
 Int Function FindStr(String asInput, String asToFind) native global
@@ -1944,11 +2098,25 @@ Int Function HexToInt(String asHexString) native global
    ; # merges an array of strings
 String Function MergeStr(String[] asInput) native global
    ;
+   ; # reads forms from a file
+   ; # ( see ExportFormsToFile and ExportAllFormsToFile for the supported format )
+   ; # ( aiMaxFormsToRead: the returned array cannot be larger than this value; -1 means limitless; default is INT16_MAX: 32767 )
+   ; # ( akFilter: can be used to filter the read forms; works with references only; Subject of the Condition Form is the read reference )
+Form[] Function ReadFormsFromFile(String asFilePath, String asFileName, ConditionForm akFilter = None, Int aiMaxFormsToRead = 32767, Bool abReturnEmptyArrayIfMaxFormsExceeded = True) native global
+   ;
    ; # replaces the string sFrom found in the input string with asTo
+   ; # ( the returned string will be all lowercase; see ReplaceStrKC )
 String Function ReplaceStr(String asInput, String asFrom, String asTo) native global
    ;
+   ; # skips converting the result string to lowercase
+String Function ReplaceStrKC(String asInput, String asFrom, String asTo) native global
+   ;
    ; # splits a string ( e.g. asInput="string", asDelim="ri", would return String[0]="st", String[1]="ng" )
+   ; # ( the returned strings will be all lowercase; see SplitStrKC )
 String[] Function SplitStr(String asInput, String asDelim) native global
+   ;
+   ; # skips converting the result string to lowercase
+String[] Function SplitStrKC(String asInput, String asDelim) native global
    ;
    ; # subtr
    ; # ( e.g. asInput="string", aiOffset=2, aiCount=3, would return "rin" )
