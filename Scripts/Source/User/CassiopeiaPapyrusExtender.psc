@@ -58,6 +58,24 @@ Bool Function ForcePathFailure(Actor akActor) native global
    ; # ( returns -2 if the actor's Active Effect data cannot be accessed at all, e.g. actor IsDisabled() )
 Int Function GetActiveEffectCount(Actor akActor) native global
    ;
+Struct ActiveEffectData
+	String sType
+	MagicEffect BaseEffect
+	Form MagicItem
+	Float fDuration
+	Float fElapsedTime
+	Float fMagnitude
+	ActorValue ResistanceValue
+	Int iEffectItemUniqueID
+	String ActiveEffectMemoryAddress
+EndStruct
+   ;
+   ; # returns this actor's Active Effects
+   ; # ( sType is the base effect's object class name e.g. "PeakValueModifierEffect" )
+   ; # ( iEffectItemUniqueID is the UniqueID of the Base Effect's Effect Item currently applied to the actor )
+   ; # ( see ActiveMagicEffect.psc for more info )
+ActiveEffectData[] Function GetActiveEffects(Actor akActor) native global
+   ;
    ; # 3D Update flags are technically stored in an uint16_t; the native code sets 3D Update flags to request additional ( or just simply specify the ) 3D updates for the next actor update phase
    ; # ( actor updates happen constantly; when the update phase is complete, the native code automatically unsets the flag if the update request identified by the flag was processed )
    ; # ai3DUpdateFlag:
@@ -318,6 +336,13 @@ Float Function GetHeightMax(ActorBase akActorBase) native global
    ; # sets the Min/Max Height
 Bool Function SetHeightMin(ActorBase akActorBase, Float afValue) native global
 Bool Function SetHeightMax(ActorBase akActorBase, Float afValue) native global
+
+
+
+   ; ##### ActorValue #####
+   ;
+   ; # returns true if this actor value can be modified in a Papyrus script
+Bool Function CanBeModifiedInScripts(ActorValue akActorValue) native global
 
 
 
@@ -613,6 +638,14 @@ String Function GetFormFlagsAsHex(Form akForm) native global
    ; # returns the form flags as int
 Int Function GetFormFlagsAsInt(Form akForm) native global
    ;
+Struct FormLinkData
+	Form LinkedForm
+	Keyword LinkKeyword
+EndStruct
+   ;
+   ; # returns the form links of this form
+FormLinkData[] Function GetFormLinks(Form akForm) native global
+   ;
    ; # returns all forms in this form list in a form array
 Form[] Function GetFormListAllForms(FormList akFormList) native global
    ;
@@ -666,6 +699,9 @@ Bool Function SetChangeFlag(Form akForm, Bool abSet, Int aiFlag) native global
    ;
    ; # set/unset a form flag
 Bool Function SetFormFlag(Form akForm, Bool abSet, Int aiFlag) native global
+   ;
+   ; # replaces the elements in this form's form link array with the elements in the specified array
+Bool Function SetFormLinks(Form akForm, FormLinkData[] akFormLinks) native global
    ;
    ; # sets this form's Full Name ( TESFullName )
 Bool Function SetTESFullName(Form akForm, String asName) native global
@@ -810,6 +846,10 @@ Actor[] Function GetVisibleActors() native global
    ;
    ; # returns true if any companion is talking
 Bool Function IsAnyCompanionTalking() native global
+   ;
+   ; # returns true if this BA2 archive is in the .\\Starfield\\Data folder
+   ; # ( asFileName expects only the file name like "ShatteredSpace - Textures.ba2" )
+Bool Function IsBA2ArchivePresent(String asFileName) native global
    ;
    ; # returns true if AI Detection ( TDetect command ) is on
 Bool Function IsGlobalAIDetectionOn() native global
@@ -987,6 +1027,12 @@ Form[] Function GetEquippedInventoryItems(Actor akActor) native global
    ; # returns the Item Indexes of this actor's equipped inventory items
 Int[] Function GetEquippedItemIndexes(Actor akActor) native global
    ;
+   ; # returns the Item Indexes of all Favorite items in this reference's inventory
+Int[] Function GetFavoriteItemIndexes(ObjectReference akReference) native global
+   ;
+   ; # returns the Item Indexes of all Featured Items in this reference's inventory
+Int[] Function GetFeaturedItemIndexes(ObjectReference akReference) native global
+   ;
    ; # returns how many inventory items this reference has
 Int Function GetInventoryItemCount(ObjectReference akReference) native global
    ;
@@ -1014,28 +1060,39 @@ Int[] Function GetItemIndexAndStackByKeyword(ObjectReference akReference, Keywor
    ; # returns the base object of the Nth item
 Form Function GetNthItemBaseObject(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
-   ; # calculates the Damage Output ( Electromagnetic, Energy, Physical ) of the Nth Weapon form
+   ; # calculates the Damage Output ( Electromagnetic, Energy, Physical ) of the Nth ( Weapon ) item
 Float Function GetNthItemDamageOutputElectromagnetic(ObjectReference akReference, int aiItemIndex, int aiStack, Bool abCountExplosives = false) native global
 Float Function GetNthItemDamageOutputEnergy(ObjectReference akReference, int aiItemIndex, int aiStack, Bool abCountExplosives = false) native global
 Float Function GetNthItemDamageOutputPhysical(ObjectReference akReference, int aiItemIndex, int aiStack, Bool abCountExplosives = false) native global
+   ;
+Struct DamageResistanceData
+	ActorValue ResistanceAV
+	Float fDamage
+EndStruct
+   ;
+   ; # returns the Damage Outputs of the Nth ( Weapon ) item
+DamageResistanceData[] Function GetNthItemDamageOutputs(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
    ; # returns the reference of the Nth item
    ; # note: editor placed and persistent references aren't deleted by the native code when they are added to an inventory
 ObjectReference Function GetNthItemReference(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
-   ; # calculates the Resistances of the Nth Armor form ( against Electromagnetic, Energy, Physical damage )
+   ; # calculates the Resistances of the Nth ( Armor ) item ( against Electromagnetic, Energy, Physical damage )
 Float Function GetNthItemDamageResistanceElectromagnetic(ObjectReference akReference, int aiItemIndex, int aiStack) native global
 Float Function GetNthItemDamageResistanceEnergy(ObjectReference akReference, int aiItemIndex, int aiStack) native global
 Float Function GetNthItemDamageResistancePhysical(ObjectReference akReference, int aiItemIndex, int aiStack) native global
    ;
-   ; # returns the Ammo of the Nth item ( Weapon )
+   ; # returns the Resistances of the Nth ( Armor ) item
+DamageResistanceData[] Function GetNthItemDamageResistances(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns the Ammo of the Nth ( Weapon ) item
 Ammo Function GetNthWeaponAmmo(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
-   ; # returns the Ammo Capacity of the Nth item ( Weapon )
+   ; # returns the Ammo Capacity of the Nth ( Weapon ) item
    ; # ( returns -1 if akReference is None OR the Nth item is not a Weapon OR the Nth Weapon does not have Ammunition data e.g. FragGrenade )
 Int Function GetNthWeaponAmmoCapacity(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
-   ; # returns the Override Projectile of the Nth item ( Weapon )
+   ; # returns the Override Projectile of the Nth ( Weapon ) item
 Projectile Function GetNthWeaponProjectile(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
    ; # returns the object mods of the Nth item at the given stack
@@ -1050,6 +1107,12 @@ Bool Function IsNthItemEquipStateLocked(Actor akActor, Int aiItemIndex) native g
    ;
    ; # returns true if the Nth item is equipped
 Bool Function IsNthItemEquipped(Actor akActor, Int aiItemIndex) native global
+   ;
+   ; # returns true if the Nth item is Favorite
+Bool Function IsNthItemFavorite(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
+   ;
+   ; # returns true if the Nth item is a Featured Item
+Bool Function IsNthItemFeaturedItem(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
    ;
    ; # returns true if the Nth item has a Legendary mod
 Bool Function IsNthItemLegendary(ObjectReference akReference, Int aiItemIndex, Int aiStack = 0) native global
@@ -1083,9 +1146,9 @@ Bool Function SetNthWeaponProjectile(ObjectReference akReference, Projectile akP
 Bool Function UnequipNthItem(Actor akActor, Int aiItemIndex, Bool abPreventEquip = false, Bool abSilent = false) native global
 ;/
 ;
-; # example function that transfers all Legendary items from akSourceContainer to akDestContainer
+; # example function that transfers all Legendary items from akSourceContainer to akDestContainer; optionally skip Favorite items and restrict to Featured Items
 ;
-Function test_TransferAllLegenaryItems(ObjectReference akSourceContainer, ObjectReference akDestContainer) Global
+Function TransferAllLegenaryItems(ObjectReference akSourceContainer, ObjectReference akDestContainer, Bool abSkipFavorites = True, Bool abRestrictToFeaturedItems = True) Global
 	If !akSourceContainer
 		Debug.MessageBox("ERROR: akSourceContainer is None")
 		Return None
@@ -1094,36 +1157,57 @@ Function test_TransferAllLegenaryItems(ObjectReference akSourceContainer, Object
 		Debug.MessageBox("ERROR: akDestContainer is None")
 		Return None
 	EndIf
+	String LogName = "TransferAllLegenaryItems"
+	Bool bInitialPapyrusLogging = GetINISettingBool("bEnableLogging:Papyrus")
+	Bool bInitialPapyrusTrace = GetINISettingBool("bEnableTrace:Papyrus")
 	Utility.SetINIBool("bEnableLogging:Papyrus", True)
 	Utility.SetINIBool("bEnableTrace:Papyrus", True)
-	Debug.OpenUserLog("TransferAllLegenaryItemsLog")
+	Debug.OpenUserLog(LogName)
 	Int Index = GetInventoryItemCount(akSourceContainer)
 	If Index == 0
-		Debug.TraceUser("TransferAllLegenaryItemsLog", "WARNING: Exiting, inventory of " + akSourceContainer + " is empty. Closing log...")
-		Debug.CloseUserLog("TransferAllLegenaryItemsLog")
+		Debug.TraceUser(LogName, "WARNING: Exiting, inventory of " + akSourceContainer + " is empty. Closing log...")
+		Debug.CloseUserLog(LogName)
 		Return None
 	EndIf
-	Debug.TraceUser("TransferAllLegenaryItemsLog", "Beginning to loop " + Index + " items in the inventory of " + akSourceContainer + "...")
+	Debug.TraceUser(LogName, "Beginning to loop " + Index + " items in the inventory of " + akSourceContainer + "...")
 	Int iTransferredItemCount = 0
 	While Index >= 0
-		If IsNthItemLegendary(akSourceContainer, aiItemIndex = Index)
-			If IsNthItemPlayable(akSourceContainer, aiItemIndex = Index)
-				Debug.TraceUser("TransferAllLegenaryItemsLog", " -> transferring Legendary item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
-				If RemoveNthItem(akSourceContainer, aiItemIndex = Index, aiCount = -1, akOtherContainer = akDestContainer)
-					iTransferredItemCount = iTransferredItemCount + 1
-				Else
-					Debug.TraceUser("TransferAllLegenaryItemsLog", "ERROR: RemoveNthItem() returned False, item couldn't be transferred.")
-				EndIf
+		Bool bSkip = False
+		If !IsNthItemLegendary(akSourceContainer, aiItemIndex = Index)
+			Debug.TraceUser(LogName, " ------ cannot transfer non Legendary item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+			bSkip = True
+		EndIf
+		If !bSkip && !IsNthItemPlayable(akSourceContainer, aiItemIndex = Index)
+			Debug.TraceUser(LogName, " ------ cannot transfer non Playable item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+			bSkip = True
+		EndIf
+		If !bSkip && abSkipFavorites && IsNthItemFavorite(akSourceContainer, aiItemIndex = Index)
+			Debug.TraceUser(LogName, " ------ cannot transfer Favorite Item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+			bSkip = True
+		EndIf
+		If !bSkip && abRestrictToFeaturedItems && !IsNthItemFeaturedItem(akSourceContainer, aiItemIndex = Index)
+			Debug.TraceUser(LogName, " ------ cannot transfer non Featured Item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+			bSkip = True
+		EndIf
+		If !bSkip
+			Debug.TraceUser(LogName, " +++ transferring Legendary item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+			If RemoveNthItem(akSourceContainer, aiItemIndex = Index, aiCount = -1, akOtherContainer = akDestContainer)
+				iTransferredItemCount = iTransferredItemCount + 1
 			Else
-				Debug.TraceUser("TransferAllLegenaryItemsLog", " -> cannot transfer non-Playable item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
+				Debug.TraceUser(LogName, "ERROR: RemoveNthItem() returned False, item couldn't be transferred.")
 			EndIf
-		Else
-			Debug.TraceUser("TransferAllLegenaryItemsLog", " -> cannot transfer non-Legendary item " + GetDisplayNameOfItem(akSourceContainer, aiItemIndex = Index) + " of base " + GetNthItemBaseObject(akSourceContainer, aiItemIndex = Index) + " at Item Index " + Index + " to " + akDestContainer)
 		EndIf
 		Index = Index - 1
 	EndWhile
-	Debug.TraceUser("TransferAllLegenaryItemsLog", "Loop finished. Transferred " + iTransferredItemCount + " items. Closing log...")
-	Debug.CloseUserLog("TransferAllLegenaryItemsLog")
+	Debug.TraceUser(LogName, "Loop finished. Transferred " + iTransferredItemCount + " items. Closing log...")
+	Debug.CloseUserLog(LogName)
+	If !bInitialPapyrusLogging
+		Utility.SetINIBool("bEnableLogging:Papyrus", False)
+	EndIf
+	If !bInitialPapyrusTrace
+		Utility.SetINIBool("bEnableTrace:Papyrus", False)
+	EndIf
+	Debug.MessageBox(LogName + ": complete. Transferred " + iTransferredItemCount + " items.")
 EndFunction
 /;
 
@@ -1166,8 +1250,22 @@ Float Function log2(Float afBase) native global
 
    ; ##### MiscObject #####
    ;
+Struct ItemComponentData
+	Form ItemComponent
+	Int iCount
+EndStruct
+   ;
+   ; # returns the components of this misc object
+ItemComponentData[] Function GetItemComponents(MiscObject akMiscObject) native global
+   ;
    ; # returns true if this misc object is a LooseMod
 Bool Function IsLooseMod(MiscObject akMiscObject) native global
+   ;
+   ; # returns true if this misc object is a Resource item ( i.e. has Resource components )
+Bool Function IsResourceItem(MiscObject akMiscObject) native global
+   ;
+   ; # replaces the item components of this misc object with the components in the specified array
+Bool Function SetItemComponents(MiscObject akMiscObject, ItemComponentData[] akItemComponents) native global
 
 
 
@@ -1199,6 +1297,18 @@ Function EnableAll(ObjectReference[] akReferences, Bool abRecalcInventory = true
    ; # returns the position of this reference's 3D
    ; # ( usually matches the ref's position, unless the ref is AttachTo() another ref )
 Float[] Function Get3DPosition(ObjectReference akReference) native global
+   ;
+Struct AVStorageEntryData
+	ActorValue theAV
+	Float fCurrentValue
+	Float fBaseValue
+	Float fModifierTemporary
+	Float fModifierPermanent
+	Float fModifierDamage
+EndStruct
+   ;
+   ; # returns all Actor Values of this reference
+AVStorageEntryData[] Function GetActorValues(ObjectReference akReference) native global
    ;
    ; # returns the Quests whose Quest Aliases this reference is filled into
 Quest[] Function GetAliasHolderQuests(ObjectReference akReference) native global
@@ -1404,6 +1514,9 @@ Bool Function IsModCollection(ObjectMod akObjectMod) native global
    ; # 		- it only places the references (it doesn't link them for example even if they have linked refs defined in the editor)
    ;
 ObjectReference[] Function PlacePackInAtCoordinates(PackIn akPackIn, float afXCenterPos, float afYCenterPos, float afZCenterPos, float afScale = 1.0) native global
+   ;
+   ; # returns the Pack-In Cell
+Cell Function GetPackInCell(PackIn akPackIn) native global
 
 
 
@@ -1531,6 +1644,99 @@ ObjectReference[] Function SortReferencesByDistance(ObjectReference[] akReferenc
 ObjectReference[] Function SortReferencesByKeywords(ObjectReference[] akReferences, Keyword[] akKeywords, bool abMustHaveAll) native global
 ObjectReference[] Function SortReferencesByName(ObjectReference[] akReferences, String asName, bool abExactMatch, bool abReversed) native global
 ObjectReference[] Function SortReferencesByReferenceArray(ObjectReference[] akSubjectReferences, ObjectReference[] akTargetReferences, bool abReversed) native global
+
+
+
+   ; ##### Spaceship Reference #####
+   ;
+Struct BlueprintData
+	Float fPosX
+	Float fPosY
+	Float fPosZ
+	Float fRotX
+	Float fRotY
+	Float fRotZ
+	Int iPartID
+	Form PartBase
+EndStruct
+   ;
+   ; # returns this spaceship's Blueprints
+BlueprintData[] Function GetSpaceshipBlueprints(ObjectReference akSpaceshipReference) native global
+   ;
+Struct SpaceshipCellData
+	Cell theCell
+	PackIn thePackIn
+EndStruct
+   ;
+   ; # returns this spaceship's Interiors and Exteriors
+SpaceshipCellData[] Function GetSpaceshipLinkedInteriors(ObjectReference akSpaceshipReference) native global
+SpaceshipCellData[] Function GetSpaceshipLinkedExteriors(ObjectReference akSpaceshipReference) native global
+   ;
+   ; # example function to log all spaceship modules
+   ;
+   ;/
+Function LogSpaceshipModules(ObjectReference akSpaceshipRef) Global
+	If !akSpaceshipRef
+		akSpaceshipRef = Game.GetPlayerHomeSpaceship()
+	EndIf
+	If !akSpaceshipRef
+		Debug.MessageBox("ERROR: akSpaceshipRef is None")
+		Return None
+	EndIf
+	String LogName = "LogSpaceshipModules"
+	BlueprintData[] TheArray = GetSpaceshipBlueprints(akSpaceshipRef)
+	Bool bInitialPapyrusLogging = GetINISettingBool("bEnableLogging:Papyrus")
+	Bool bInitialPapyrusTrace = GetINISettingBool("bEnableTrace:Papyrus")
+	Utility.SetINIBool("bEnableLogging:Papyrus", True)
+	Utility.SetINIBool("bEnableTrace:Papyrus", True)
+	Debug.OpenUserLog(LogName)
+	Debug.TraceUser(LogName, "Beginning to loop " + TheArray.Length + " elements")
+	Int Index = 0
+	While Index < TheArray.Length
+		;
+		Debug.TraceUser(LogName, Index + " | fPosX: " + TheArray[Index].fPosX)
+		Debug.TraceUser(LogName, Index + " | fPosY: " + TheArray[Index].fPosY)
+		Debug.TraceUser(LogName, Index + " | fPosZ: " + TheArray[Index].fPosZ)
+		Debug.TraceUser(LogName, Index + " | fRotX: " + TheArray[Index].fRotX)
+		Debug.TraceUser(LogName, Index + " | fRotY: " + TheArray[Index].fRotY)
+		Debug.TraceUser(LogName, Index + " | fRotZ: " + TheArray[Index].fRotZ)
+		Debug.TraceUser(LogName, Index + " | iPartID: " + TheArray[Index].iPartID)
+		Debug.TraceUser(LogName, Index + " | PartBase: " + TheArray[Index].PartBase)
+		;
+		If TheArray[Index].PartBase
+			FormLinkData[] FormLinks = GetFormLinks(TheArray[Index].PartBase)
+			Int Index0 = 0
+			While Index0 < FormLinks.Length
+				;
+				Cell PackInCell = None
+				If FormLinks[Index0].LinkedForm as PackIn
+					PackInCell = GetPackInCell(FormLinks[Index0].LinkedForm as PackIn)
+					If PackInCell
+						Debug.TraceUser(LogName, "     " + Index0 + " | LinkedForm: " + FormLinks[Index0].LinkedForm + " (Pack-In Cell --> " + PackInCell + ")")
+					EndIf
+				EndIf
+				If !PackInCell
+					Debug.TraceUser(LogName, "     " + Index0 + " | LinkedForm: " + FormLinks[Index0].LinkedForm)
+				EndIf
+				;
+				Debug.TraceUser(LogName, "     " + Index0 + " | LinkKeyword: " + FormLinks[Index0].LinkKeyword)
+				Index0 = Index0 + 1
+			EndWhile
+		EndIf
+		;
+		Index = Index + 1
+	EndWhile
+	Debug.TraceUser(LogName, "Loop finished. Closing log...")
+	Debug.CloseUserLog(LogName)
+	If !bInitialPapyrusLogging
+		Utility.SetINIBool("bEnableLogging:Papyrus", False)
+	EndIf
+	If !bInitialPapyrusTrace
+		Utility.SetINIBool("bEnableTrace:Papyrus", False)
+	EndIf
+	Debug.MessageBox(LogName + ": complete. Processed " + TheArray.Length + " elements in TheArray.")
+EndFunction
+   /;
 
 
 
