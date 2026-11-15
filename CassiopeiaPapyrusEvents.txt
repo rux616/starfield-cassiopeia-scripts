@@ -86,11 +86,44 @@ Function TESCellFullyLoadedEvent(Cell akCell) global
 ; # has akFilter support ( code checks for both the activated and the action references, disjunctive )
 Function TESActivateEvent(ObjectReference akActivatedRef, ObjectReference akActionRef) global
 ;
-; # workshop events
-; # have akFilter support ( code checks for both itemRef and workshopRef, disjunctive )
-Function Workshop_ItemGrabbedEvent(ObjectReference itemRef, ObjectReference workshopRef) global
+; ## Workshop events ##
+;
+; # All Workshop events have akFilter support ( code can check both itemRef and workshopRef, disjunctive ).
+; # Placement Item: the item reference the player is trying to Move or Build.
+; # Placement Status: this is the calculated placement result like "Overlapping with player." See enum values at end of file.
+; # The vanilla code identifies the Placement Item by its reference handle.
+; # Use GetReferenceByHandle to get it as Object Reference ( see CassiopeiaPapyrusExtender.psc ).
+;
+; # received when an item is Moved in Workshop Mode
 Function Workshop_ItemMovedEvent(ObjectReference itemRef, ObjectReference workshopRef) global
+;
+; # received when a new item is Built in Workshop Mode
 Function Workshop_ItemPlacedEvent(ObjectReference itemRef, ObjectReference workshopRef) global
+;
+; # received when the Placement Status of the Placement Item changes
+; # ( note: workshopRef is None while placing the Outpost Beacon for a new Outpost )
+Function Workshop_PlacementStatusEvent(Int aePlacementStatus, Int aiPlacementItemHandle, ObjectReference workshopRef) global
+;
+; # received when Build mode is entered
+Function Workshop_BuildModeEnterEvent(Int aiPlacementItemHandle, ObjectReference workshopRef) global
+;
+; # received when Build mode is exited
+Function Workshop_BuildModeExitEvent(ObjectReference workshopRef) global
+;
+; # received when the player selects ("grabs") an item to Move
+Function Workshop_ItemGrabbedEvent(Int aiGrabbedItemHandle, Int aiPlacementItemHandle, ObjectReference workshopRef) global
+;
+; # received when the player the releases the grabbed item ( i.e. when the item Move mode is exited )
+Function Workshop_ItemReleasedEvent(Int aiReleasedItemHandle, ObjectReference workshopRef) global
+;
+; # received when an item gets highlighted ( i.e. player starts looking at an item )
+Function Workshop_ItemHighlightEnterEvent(Int aiHighlightedItemHandle, ObjectReference workshopRef) global
+;
+; # received when the highlighted item changes ( i.e. player looks at another item )
+Function Workshop_ItemHighlightChangeEvent(Int aiCurrentHighlightedItemHandle, Int aiPreviousHighlightedItemHandle, ObjectReference workshopRef) global
+;
+; # received when the stops looking at an item
+Function Workshop_ItemHighlightExitEvent(Int aiHighlightedItemHandle, ObjectReference workshopRef) global
 ;
 ; # input event
 ; # ( aiKeyCode is Virtual-Key Code, see https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes )
@@ -156,7 +189,6 @@ Workshop_ItemRepairedEvent
 Workshop_ItemScrappedEvent
 Workshop_OutpostNameChangedEvent
 Workshop_OutpostPlacedEvent
-Workshop_PlacementStatusEvent
 Workshop_PowerOffEvent
 Workshop_PowerOnEvent
 Workshop_SnapBehaviorCycledEvent
@@ -193,6 +225,52 @@ PhotoMode_TakeSnapshot
 
 
 
+; ##### Placement Status enum #####
+;
+; Values are as defined by BGS.
+;
+0 = NONE
+1 = NO_ITEM
+2 = VALID
+3 = FLOATING
+4 = INTERSECTING
+5 = TERRAIN_ONLY
+6 = IN_WATER
+7 = NOT_IN_WATER
+8 = NAVMESH_ONLY
+9 = SPLINE_TOO_LONG
+10 = OUTSIDE_BUILD_AREA
+11 = REDUNDANT_SPLINE
+12 = ATTACHED_SPLINE_INVALID
+13 = UNSUPPORTED
+14 = UNSUPPORTED_FORWARD_CAST
+15 = UNSUPPORTED_CLAMP_UP
+16 = NO_SNAPPING
+17 = NO_SNAPPING_FLOOR
+18 = RADIUS_OVERLAP
+19 = TIMER
+20 = OUTSIDE_PLAYABLE_AREA
+21 = PLACEMENT_OVERLAPS_WORKSHOP
+22 = PLACEMENT_RESTRICTED_AREA
+23 = PLACEMENT_MISSING_RESOURCES
+24 = PLACEMENT_MISSING_COMPONENTS
+25 = TOO_CLOSE_TO_PLAYER
+26 = FOUNDATION_TOO_TALL
+27 = ON_ANIMATED_DOOR
+28 = INVALID_SURFACE
+29 = PERK_REQUIREMENT_NOT_MET
+30 = EXCEEDED_BUDGET
+31 = EXCEEDED_MAX_COUNT
+32 = DELETE_FAIL
+33 = NOT_FOUND
+34 = TargetIsHarvester
+35 = BuilderInputMismatch
+36 = BuilderOutputMismatch
+37 = ContainerFilterMismatch
+38 = AlreadyConnected
+39 = TransferSamePackin
+40 = InvalidTarget
+255 = UNSPECIFIED
 
 
 

@@ -89,6 +89,12 @@ Actor[] Function GetActorsDetectedBy(Actor akDetecter, bool abMustHaveLOS = fals
    ; # returns the actors currently detecting this actor; can be filtered for LOS
 Actor[] Function GetActorsDetecting(Actor akDetected, bool abMustHaveLOS = false) native global
    ;
+   ; # returns this actor's Follow AI Package target reference ( if any )
+ObjectReference Function GetAIFollowTargetRef(Actor akActor) native global
+   ;
+   ; # returns this actor's AI Package target reference ( if any )
+ObjectReference Function GetAITargetRef(Actor akActor) native global
+   ;
    ; # returns the active Anim Face Archetype
 Keyword Function GetAnimFaceArchetype(Actor akActor) native global
    ;
@@ -97,6 +103,9 @@ Keyword Function GetAnimFaceArchetypeEditorDefined(Actor akActor) native global
    ;
    ; # returns the ActorBase that holds this actor's appearance data
 ActorBase Function GetAppearanceSource(Actor akActor) native global
+   ;
+   ; # returns this actor's Current Package target reference ( if any )
+ObjectReference Function GetCurrentPackageTargetRef(Actor akActor) native global
    ;
    ; # returns the Factions of this actor
 Faction[] Function GetFactions(Actor akActor) native global
@@ -628,6 +637,9 @@ Float[] Function GetObjectBounds(Form akForm) native global
    ;
    ; # returns this form's Full Name ( TESFullName )
 String Function GetTESFullName(Form akForm) native global
+   ;
+   ; # returns true if this base form has the specified Base Form Component ( such as "BGSDisplayCase" or "BGSAnimationGraph_Component" )
+Bool Function HasBaseFormComponent(Form akForm, String asBaseFormComponent) native global
    ;
    ; # returns true if this form is runtime created ( i.e. formID starts with FF )
 Bool Function IsCreated(Form akForm) native global
