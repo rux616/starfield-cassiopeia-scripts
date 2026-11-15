@@ -388,6 +388,9 @@ Bool Function IsInThirdPerson() native global
    ;
    ; # returns true if this cell is fully loaded
 Bool Function GetCellLoaded(Cell akCell) native global
+   ;
+   ; # returns how many references are in this cell
+Int Function GetCellReferenceCount(Cell akCell) native global
 
 
 
@@ -625,6 +628,9 @@ String Function GetChangeFlagsAsHex(Form akForm) native global
    ; # returns the change flags as int
 Int Function GetChangeFlagsAsInt(Form akForm) native global
    ;
+   ; # finds a form by HexFormID
+Form Function GetFormByHexFormID(String asHexFormID) native global
+   ;
    ; # returns this form's Console description
    ; # ( e.g. for Sarah, "ACHR Form '' (00005986) to NPC_ form '' (00005983) in Cell 'CityNewAtlantisLodgeInt' (0006BB29)" )
 String Function GetFormDescription(Form akForm) native global
@@ -673,6 +679,15 @@ Bool Function GetIsFormFlagSet(Form akForm, Int aiFlag) native global
    ; # returns the Object Bounds if the form has this value ( SF1Edit >> OBND - Object Bounds )
 Float[] Function GetObjectBounds(Form akForm) native global
    ;
+Struct PropertySheetData
+	Form propertyForm
+	Float fValue
+	Int iValue
+EndStruct
+   ;
+   ; # returns the property sheet
+PropertySheetData[] Function GetPropertySheet(Form akForm) native global
+   ;
    ; # returns this form's Full Name ( TESFullName )
 String Function GetTESFullName(Form akForm) native global
    ;
@@ -702,6 +717,9 @@ Bool Function SetFormFlag(Form akForm, Bool abSet, Int aiFlag) native global
    ;
    ; # replaces the elements in this form's form link array with the elements in the specified array
 Bool Function SetFormLinks(Form akForm, FormLinkData[] akFormLinks) native global
+   ;
+   ; # replaces the elements in this form's property sheet with the elements in the specified array
+Bool Function SetPropertySheet(Form akForm, PropertySheetData[] akPropertySheet) native global
    ;
    ; # sets this form's Full Name ( TESFullName )
 Bool Function SetTESFullName(Form akForm, String asName) native global
@@ -755,6 +773,10 @@ ObjectReference Function GetCrosshairRef() native global
    ;
    ; # returns all existing Crowd actors
 Actor[] Function GetCrowdActors() native global
+   ;
+   ; # returns the Autopilot target in Cruise Mode
+   ; # ( may be a Cell or a Planet form )
+Form Function GetCruiseModeAutopilotTarget() native global
    ;
    ; # returns the game date in an Int[], the 7 elements are as follows:
    ; # year, month, day, local hour and minute, UT hour and minute
@@ -828,6 +850,10 @@ Float Function GetReferenceCameraHeadingAngle(ObjectReference akReference) nativ
    ;
    ; # returns the total Reference Handle count
 Int Function GetReferenceHandleCount() native global
+   ;
+   ; # returns the target selected in the Spaceship Reticle
+   ; # ( may be a Map Marker object reference, Planet or Star form )
+Form Function GetReticleTarget() native global
    ;
    ; # returns the sorted actors from the HighActorProcessLevel
 Actor[] Function GetSortedHighActors() native global
@@ -905,11 +931,21 @@ Function PlayMenuSound(String asSoundName) native global
    ;
 Function SetCameraState(Int aeCameraState) native global
    ;
+   ; # sets the Autopilot target in Cruise Mode
+   ; # ( must be a Cell or a Planet form )
+   ; # ( valid Cell form is for example "Starstation RE-939" [0003DBEC] )
+   ; # ( make sure the target form is located in the same star system as the player )
+Bool Function SetCruiseModeAutopilotTarget(Form akForm = None) native global
+   ;
    ; # shows/hides the first person model in first person mode
 Bool Function SetFirstPersonModelVisible(Bool abVisible) native global
    ;
    ; # changes the time scale ( first param affects everything and everyone except the player; the second param only affects the player )
 Bool Function SetGlobalTimeMultiplier(Float afGlobalTimeMultiplier, Float afPlayerRelativeTimeMultiplier) native global
+   ;
+   ; # sets the Spaceship Reticle target
+   ; # ( must be a Map Marker object reference, Planet or Star form )
+Bool Function SetReticleTarget(Form akForm = None) native global
    ;
    ; # requests the vanilla code to create a ScreenShot
    ; # ( as per vanilla design, they are saved in ..\\Documents\\My Games\\Starfield\\NonPhotoModeScreenshots )
@@ -1449,6 +1485,12 @@ Bool Function IsWorkshopItem(ObjectReference akReference) native global
    ; # moves all references to their Editor Location
 Bool Function MoveAllToEditorLocation(ObjectReference[] akReferences) native global
    ;
+   ; # requests the vanilla code to open the ContainerMenu
+   ; # ( returns true if the request was sent, not if the menu actually opened )
+   ; # ( aeContainerMode: 0 = Default, 1 = StealingFromContainer, 2 = Teammate, 3 = Workbench, 4 = PlayerShipTransfer )
+   ; # ( if akHomeshipRef is specified, the Homeship will be available for transfer as well )
+Bool Function OpenContainerMenu(ObjectReference akContainerRef, Int aeContainerMode = 0, ObjectReference akHomeshipRef = None) native global
+   ;
    ; # renames this Outpost Beacon or Decorate activator reference
 Bool Function RenameOutpost(ObjectReference akReference, String asName) native global
    ;
@@ -1886,6 +1928,15 @@ Int Function GetFormTypeStrAsInt(String asFormType) native global
    ;
    ; # as it is more convenient than ( IntToHex(akForm.GetFormID()) )
 String Function GetHexFormID(Form akForm) native global
+   ;
+   ; # returns the GPU memory usage percent of Starfield ( total available / Starfield )
+Float Function GetStarfieldGPUMemoryUsagePercent() native global
+   ;
+   ; # returns the GPU memory size ( in megabytes )
+Float Function GetTotalGPUMemory() native global
+   ;
+   ; # returns the total GPU memory usage percent
+Float Function GetTotalGPUMemoryUsagePercent() native global
    ;
    ; # convert hex to int
 Int Function HexToInt(String asHexString) native global

@@ -142,6 +142,9 @@ Function TextInputMenu_EndEditText(String sInputText) global
 ; # note that scripts must be previously filtered for the deleted form to receive this event
 Function TESFormDeleteEvent(Int aiDeletedFormID) global
 ;
+; # string version
+Function TESFormDeleteEventStr(String sHexFormID) global
+;
 ; # when this reference is loaded / unloaded
 ; # has akFilter support
 Function TESObjectLoadedEvent(ObjectReference akReference, bool abLoaded) global
@@ -170,6 +173,11 @@ Function TESHarvestEvent(Actor akActor, ObjectReference akHarvestedReference, Fo
 ; # when this Outpost is removed
 ; # has akFilter support ( code can check akOutpostCell, akOutpostLocation and akOutpostWorldSpace as well, disjunctive )
 Function RemoveOutpostEvent(Cell akOutpostCell, Location akOutpostLocation, WorldSpace akOutpostWorldSpace) global
+;
+; # when Cruise Mode Autopilot is engaged
+; # akAutopilotTarget may be a Cell or a Planet form
+; # ( see other Cruise Mode events below )
+Function OnCruiseLockCourse(Form akAutopilotTarget) global
 
 
 
@@ -178,49 +186,53 @@ Function RemoveOutpostEvent(Cell akOutpostCell, Location akOutpostLocation, Worl
 ; ##### Events ( without EventData ) #####
 ;
 ;
-TESLoadGameEvent
-FirstThirdPersonSwitch
-Workshop_CargoLinkAddedEvent
-Workshop_CargoLinkTargetChangedEvent
-Workshop_EnterOutpostBeaconModeEvent
-Workshop_ItemProducedEvent
-Workshop_ItemRemovedEvent
-Workshop_ItemRepairedEvent
-Workshop_ItemScrappedEvent
-Workshop_OutpostNameChangedEvent
-Workshop_OutpostPlacedEvent
-Workshop_PowerOffEvent
-Workshop_PowerOnEvent
-Workshop_SnapBehaviorCycledEvent
-Workshop_WorkshopFlyCameraEvent
-Workshop_WorkshopItemPlacedEvent
-Workshop_WorkshopModeEvent
-Workshop_WorkshopOutputLinkEvent
-Workshop_WorkshopStatsChangedEvent
-Workshop_WorkshopUpdateStatsEvent
-CraftingMenu_CraftItem
-CraftingMenu_InstallMod
-CraftingMenu_RenameItem
-StarMapMenu_ExecuteRoute
-StarMapMenu_Galaxy_FocusSystem
-StarMapMenu_LandingInputInProgress
-StarMapMenu_MarkerGroupContainerVisibilityChanged
-StarMapMenu_MarkerGroupEntryClicked
-StarMapMenu_MarkerGroupEntryHoverChanged
-StarMapMenu_OnCancel
-StarMapMenu_OnClearRoute
-StarMapMenu_OnExitStarMap
-StarMapMenu_OnGalaxyViewInitialized
-StarMapMenu_OnHintButtonClicked
-StarMapMenu_OnOutpostEntrySelected
-StarMapMenu_QuickSelectChange
-StarMapMenu_ReadyToClose
-StarMapMenu_ScanPlanet
-StarMapMenu_SelectedLandingSite
-StarMapMenu_ShowRealCursor
-SurfaceMapMenu_MarkerClicked
-SurfaceMapMenu_TryPlaceCustomMarker
-PhotoMode_TakeSnapshot
+Function TESLoadGameEvent() global
+Function FirstThirdPersonSwitch() global
+Function Workshop_CargoLinkAddedEvent() global
+Function Workshop_CargoLinkTargetChangedEvent() global
+Function Workshop_EnterOutpostBeaconModeEvent() global
+Function Workshop_ItemProducedEvent() global
+Function Workshop_ItemRemovedEvent() global
+Function Workshop_ItemRepairedEvent() global
+Function Workshop_ItemScrappedEvent() global
+Function Workshop_OutpostNameChangedEvent() global
+Function Workshop_OutpostPlacedEvent() global
+Function Workshop_PowerOffEvent() global
+Function Workshop_PowerOnEvent() global
+Function Workshop_SnapBehaviorCycledEvent() global
+Function Workshop_WorkshopFlyCameraEvent() global
+Function Workshop_WorkshopItemPlacedEvent() global
+Function Workshop_WorkshopModeEvent() global
+Function Workshop_WorkshopOutputLinkEvent() global
+Function Workshop_WorkshopStatsChangedEvent() global
+Function Workshop_WorkshopUpdateStatsEvent() global
+Function CraftingMenu_CraftItem() global
+Function CraftingMenu_InstallMod() global
+Function CraftingMenu_RenameItem() global
+Function StarMapMenu_ExecuteRoute() global
+Function StarMapMenu_Galaxy_FocusSystem() global
+Function StarMapMenu_LandingInputInProgress() global
+Function StarMapMenu_MarkerGroupContainerVisibilityChanged() global
+Function StarMapMenu_MarkerGroupEntryClicked() global
+Function StarMapMenu_MarkerGroupEntryHoverChanged() global
+Function StarMapMenu_OnCancel() global
+Function StarMapMenu_OnClearRoute() global
+Function StarMapMenu_OnExitStarMap() global
+Function StarMapMenu_OnGalaxyViewInitialized() global
+Function StarMapMenu_OnHintButtonClicked() global
+Function StarMapMenu_OnOutpostEntrySelected() global
+Function StarMapMenu_QuickSelectChange() global
+Function StarMapMenu_ReadyToClose() global
+Function StarMapMenu_ScanPlanet() global
+Function StarMapMenu_SelectedLandingSite() global
+Function StarMapMenu_ShowRealCursor() global
+Function SurfaceMapMenu_MarkerClicked() global
+Function SurfaceMapMenu_TryPlaceCustomMarker() global
+Function PhotoMode_TakeSnapshot() global
+Function OnCruiseInterdiction() global
+Function OnCruiseDeparture() global
+Function OnCruiseUnlockCourse() global
+Function Reticle_OnLongAnimFinished() global
 
 
 
