@@ -127,6 +127,22 @@ Keyword Function GetAnimFaceArchetypeEditorDefined(Actor akActor) native global
    ; # returns the ActorBase that holds this actor's appearance data
 ActorBase Function GetAppearanceSource(Actor akActor) native global
    ;
+Struct DialogueLineData
+	Bool bValid
+	TopicInfo theTopicInfo
+	Topic theTopic
+	Quest theQuest
+	Int iResponseIndex
+	String sResponseText
+	Bool bIsLastResponse
+	Keyword theAnimFaceArchetype
+EndStruct
+   ;
+   ; # returns information about this actor's currently spoken dialogue line
+   ; # ( bValid = true means dialogue info exists, so the actor IsTalking )
+   ; # ( note: this is faster than the GetLastSaid functions )
+DialogueLineData Function GetDialogueLineData(Actor akActor) native global
+   ;
    ; # returns this actor's Current Package target reference ( if any )
 ObjectReference Function GetCurrentPackageTargetRef(Actor akActor) native global
    ;
@@ -256,6 +272,9 @@ Bool Function IsStaggered(Actor akActor) native global
    ;
    ; # returns true if this actor is swimming
 Bool Function IsSwimming(Actor akActor) native global
+   ;
+   ; # returns true if this actor is talking
+Bool Function IsTalking(Actor akActor) native global
    ;
    ; # returns true if this actor is turning
 Bool Function IsTurning(Actor akActor) native global
@@ -631,6 +650,8 @@ Bool Function AddNativeEventFilter(String asScriptName, String asEventName, Form
 Form[] Function GetNativeEventFilteredForms(String asScriptName, String asEventName) native global
 Bool Function IsRegisteredForNativeEvent(String asScriptName, String asEventName) native global
    ;
+Bool Function RemoveAllNativeEventFilters(String asScriptName, String asEventName) native global
+   ;
    ; # debug use only
 Int Function RegisterForAllNativeEvents(String asScriptName) native global
    ;
@@ -823,6 +844,9 @@ Float Function GetAIUpdateTimer() native global
    ; # returns the position ( x, y, z ) of the world camera
 Float[] Function GetCameraPosition() native global
    ;
+   ; # returns the closest Outpost Beacon or Decorate activator ref
+ObjectReference Function GetClosestWorkshop() native global
+   ;
    ; # returns the Console selected reference
 ObjectReference Function GetConsoleRef() native global
    ;
@@ -838,6 +862,12 @@ Actor[] Function GetCrowdActors() native global
    ; # returns the Autopilot target in Cruise Mode
    ; # ( may be a Cell or a Planet form )
 Form Function GetCruiseModeAutopilotTarget() native global
+   ;
+   ; # returns the Latitude ( uses the player's planet surface position )
+Float Function GetCurrentWorldSpaceLatitude() native global
+   ;
+   ; # returns the Longitude ( uses the player's planet surface position )
+Float Function GetCurrentWorldSpaceLongitude() native global
    ;
 Struct CustomMarkerData
 	Bool bValid
@@ -1460,11 +1490,16 @@ ObjectReference Function GetAttachToRef(ObjectReference akReference) native glob
    ; # returns the current Biome of this reference
 Biome Function GetCurrentBiome(ObjectReference akReference) native global
    ;
+   ; # calculates the distance between two references ( AstronomicalUnits or AU )
+Float Function GetDistanceAstronomicalUnits(ObjectReference akReference, ObjectReference akReference2) native global
+   ;
    ; # calculates the distance between a reference and a ( loaded ) planet; optionally measured from the planet surface and not its center
 Float Function GetDistanceFromCelestialBody(ObjectReference akReference, Planet akCelestialBody, Bool abSurface = true) native global
    ;
-   ; # calculates the distance between two references in light years
+   ; # calculates the distance between two references ( Light Years, Megameter, Parsec )
 Float Function GetDistanceGalacticLightYears(ObjectReference akReference, ObjectReference akReference2) native global
+Float Function GetDistanceGalacticMegaMeter(ObjectReference akReference, ObjectReference akReference2) native global
+Float Function GetDistanceGalacticParsec(ObjectReference akReference, ObjectReference akReference2) native global
    ;
    ; # returns the dropped item reference ( actors can drop a weapon when killed )
 ObjectReference Function GetDroppedItemRef(ObjectReference akReference) native global
@@ -1777,6 +1812,9 @@ Bool Function IsRunOnStartStage(Quest akQuest, Int auiStageID) native global
    ;
    ; # returns true if the Quest Stage with the specified ID has the Run on Stop flag
 Bool Function IsRunOnStopStage(Quest akQuest, Int auiStageID) native global
+   ;
+   ; # Papyrus version of the SetQuestAliases Console function
+Bool Function SetQuestAliases(Quest akQuest) native global
    ;
    ; # sets/unsets this quest's failed flag
    ; # ( returns true if the operation was attempted )
@@ -2098,9 +2136,12 @@ Int Function HexToInt(String asHexString) native global
    ; # merges an array of strings
 String Function MergeStr(String[] asInput) native global
    ;
-   ; # reads forms from a file
+   ; # reads HexFormIDs from a file
    ; # ( see ExportFormsToFile and ExportAllFormsToFile for the supported format )
    ; # ( aiMaxFormsToRead: the returned array cannot be larger than this value; -1 means limitless; default is INT16_MAX: 32767 )
+String[] Function ReadHexFormIDsFromFile(String asFilePath, String asFileName, Int aiMaxFormsToRead = 32767, Bool abReturnEmptyArrayIfMaxFormsExceeded = True) native global
+   ;
+   ; # reads forms from a file
    ; # ( akFilter: can be used to filter the read forms; works with references only; Subject of the Condition Form is the read reference )
 Form[] Function ReadFormsFromFile(String asFilePath, String asFileName, ConditionForm akFilter = None, Int aiMaxFormsToRead = 32767, Bool abReturnEmptyArrayIfMaxFormsExceeded = True) native global
    ;
@@ -2159,8 +2200,11 @@ String Function GetCallingThreadName() native global
    ; # prints the AllFormsMap to a file
 Function PrintAllFormsMapToFile() native global
    ;
-   ; # releases all Papyrus script objects attached to this form
+   ; # releases all attached Papyrus script objects
 Bool Function ReleasePapyrusObjects(String asHexFormID) native global
+   ;
+   ; # releases all attached Papyrus script objects; returns how many forms were processed
+Int Function ReleasePapyrusObjectsArray(String[] asHexFormIDs) native global
 
 
 
